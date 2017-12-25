@@ -32,17 +32,19 @@ def load_geom(datadir):
 def load_cf_data(datadir, channel):
     datafile = datadir / "UB.asc"
     state = channel.solver.state
-    i = 0 # component
     size = state.fields[0]['g'].size
     nx, ny, nz = state.fields[0]['g'].shape
+    
     with datafile.open() as df:
         for n in range(size):
+            # these are the *channelflow* i,j,k
             i = n // (ny*nz)
-            k = n % nz
-            j = (n - k - (ny*nz*i))//nz
-            state['u']['g'][i,j,k] = float(df.readline())
-            state['w']['g'][i,j,k] = float(df.readline())
-            state['v']['g'][i,j,k] = float(df.readline())
+            k = n % ny
+            j = (n - k - (ny*nz*i))//ny
+
+            state['u']['g'][i,k,j] = float(df.readline())
+            state['w']['g'][i,k,j] = float(df.readline())
+            state['v']['g'][i,k,j] = float(df.readline())
 
     # take derivatives
     state['u'].differentiate('z', out=state['uz'])
